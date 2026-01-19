@@ -1,0 +1,12 @@
+{
+  "createBooking": {
+    "firstname": "John",
+    "lastname": "Smith",
+    "price": 123,
+    "paid": true
+  },
+  "loginValidUser": {
+    "username": "admin",
+    "password": "password123"
+  }
+}

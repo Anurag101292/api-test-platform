@@ -1,0 +1,19 @@
+env: qa
+
+qa:
+  baseUrl: https://restful-booker.herokuapp.com
+  timeout: 10000
+
+  db:
+    type: oracle
+    host: 10.10.10.10
+    port: 1521
+    serviceName: ORCLPDB1
+    user: app_user
+    password: secret
+
+  auth:
+    type: token
+
+logging:
+  level: INFO
