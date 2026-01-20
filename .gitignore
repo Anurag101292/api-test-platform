@@ -37,3 +37,32 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+/.vscode/
+
+# macOS
+.DS_Store
+
+# Maven
+/target/
+
+# Logs
+*.log
+
+# Allure results (test artifacts)
+/allure-results/
+
+# Test reports
+/surefire-reports/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Misc
+.env
