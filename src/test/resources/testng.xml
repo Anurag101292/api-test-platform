@@ -1,6 +1,6 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 <suite name="API Platform Suite">
-    <test name="Platform Sanity">
+    <test name="All Tests">
         <packages>
             <package name="org.example.tests"/>
         </packages>

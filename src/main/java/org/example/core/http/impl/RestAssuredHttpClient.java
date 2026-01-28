@@ -3,6 +3,9 @@ package org.example.core.http.impl;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import org.example.core.event.EventBus;
+import org.example.core.event.events.ApiRequestFinishedEvent;
+import org.example.core.event.events.ApiRequestStartedEvent;
 import org.example.core.http.HttpClient;
 import org.example.model.request.ApiRequest;
 import org.example.model.response.ApiResponse;
@@ -32,10 +35,11 @@ public class RestAssuredHttpClient implements HttpClient {
         if (request.getBody() != null) {
             spec.body(request.getBody());
         }
+        EventBus.publish(new ApiRequestStartedEvent(request));
 
         Response response;
 
-        String url = request.getBaseUrl() + request.getPath();
+        String url = request.buildFinalUrl();
 
         switch (request.getMethod()) {
             case GET -> response = spec.when().get(url);
@@ -54,10 +58,15 @@ public class RestAssuredHttpClient implements HttpClient {
                         (a, b) -> b
                 ));
 
-        return new ApiResponse()
+        ApiResponse apiResponse = new ApiResponse()
                 .setStatusCode(response.getStatusCode())
                 .setBody(response.getBody().asString())
                 .setHeaders(headersMap)
                 .setResponseTimeMs(response.getTime());
+
+        EventBus.publish(new ApiRequestFinishedEvent(request, apiResponse));
+
+        return  apiResponse;
     }
+
 }

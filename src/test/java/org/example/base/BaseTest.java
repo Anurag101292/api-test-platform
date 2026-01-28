@@ -4,6 +4,9 @@ import org.example.core.config.ConfigManager;
 import org.example.core.context.TestExecutionContext;
 import org.example.tests.listeners.FrameworkStartedLogger;
 import org.example.tests.listeners.FrameworkStoppedLogger;
+import org.example.tests.plugins.AllureReportingPlugin;
+import org.example.tests.plugins.ApiLoggingPlugin;
+import org.example.tests.plugins.RetryPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterSuite;
@@ -17,6 +20,10 @@ import org.example.engine.data.DataProviderFactory;
 import org.example.engine.data.JsonDataProvider;
 import org.example.engine.schema.SchemaValidatorFactory;
 import org.example.engine.schema.JsonSchemaValidator;
+import org.example.core.http.HttpClient;
+import org.example.core.http.impl.RestAssuredHttpClient;
+import org.example.service.booking.BookingService;
+import org.example.service.booking.impl.BookingServiceImpl;
 
 
 import java.util.Map;
@@ -24,6 +31,8 @@ import java.util.Map;
 public class BaseTest {
 
     protected static final Logger log = LoggerFactory.getLogger(BaseTest.class);
+    protected static HttpClient httpClient;
+    protected static BookingService bookingService;
 
 
 
@@ -55,15 +64,28 @@ public class BaseTest {
         log.info("✅ FrameworkContext initialized");
         log.info("✅ Framework initialization completed");
 
-        // Initialize and start plugins
-        PluginManager.register(new LifecycleLoggingPlugin());
 
         EventBus.register(FrameworkStartedEvent.class, new FrameworkStartedLogger());
         EventBus.register(FrameworkStoppedEvent.class, new FrameworkStoppedLogger());
+        // Initialize and start plugins
+        PluginManager.register(new LifecycleLoggingPlugin());
 
+        httpClient = new RestAssuredHttpClient();
+        log.info("✅ HttpClient initialized (RestAssured)");
+
+// Initialize Services
+        bookingService = new BookingServiceImpl(httpClient);
+        log.info("✅ BookingService initialized");
 
         EventBus.publish(new FrameworkStartedEvent());
         log.info("📣 FrameworkStartedEvent published");
+
+        PluginManager.register(new ApiLoggingPlugin());
+
+        PluginManager.register(new RetryPlugin(2));
+
+        PluginManager.register(new AllureReportingPlugin());
+
 
 
     }

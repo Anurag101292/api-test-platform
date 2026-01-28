@@ -34,6 +34,10 @@ public class ConfigManager {
         return value;
     }
 
+    public static String getString(String key) {
+        return get(key).toString();
+    }
+
     public static String getEnv() {
         return (String) config.get("env");
     }

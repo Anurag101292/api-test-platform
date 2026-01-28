@@ -273,3 +273,28 @@ Mock engine
 DB engine
 Reporting plugin
 AI diagnostics plugin
+
+## Generating Allure reports
+
+If you already have `allure-results/` (the test run artifacts) in the project root, you can generate an HTML report using the Allure CLI.
+
+Preferred (if you have Allure installed):
+
+```bash
+allure generate ./allure-results -o ./target/allure-report
+allure open ./target/allure-report
+```
+
+Quick helper script (macOS/Linux):
+
+```bash
+./scripts/generate-allure.sh
+```
+
+Common issue on Java 11+:
+- The Allure commandline may fail with `NoClassDefFoundError: javax/xml/bind/annotation/XmlElement`. This happens because JAXB (javax.xml.bind) was removed from the JDK since Java 11. Solutions:
+  - Install Allure CLI via Homebrew which bundles a compatible commandline: `brew install allure` (macOS).
+  - Use Java 8 to run the Allure commandline, or install `org.glassfish.jaxb:jaxb-runtime` and run the commandline with that on the classpath (advanced).
+
+Note: The project includes the Allure TestNG adapter dependency. The Maven plugin `io.qameta.allure:allure-maven` may be used if you prefer generating reports via Maven; however plugin resolution and the commandline it downloads can fail under Java 11 unless Allure CLI or JAXB is available. Using the system `allure` CLI is most robust.
+
