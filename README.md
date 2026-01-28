@@ -38,39 +38,142 @@ Which means:
     - Pluggable
     - Extendable
 
----
 
-## 🏗️ Current Project Structure
+## Project structure (detailed)
 
-src/main/java/org/example
-├── core
-│ ├── config → ConfigManager (YAML config loader)
-│ ├── context → TestExecutionContext (runtime shared state)
-│ ├── event → EventBus, Event, EventListener (event system)
-│ ├── plugin → Plugin, PluginManager (plugin lifecycle)
-│ ├── report → (reserved)
-│ ├── retry → (reserved)
-│ └── auth → (reserved)
-│
-├── engine
-│ ├── data → Data Engine (JSON test data abstraction)
-│ ├── schema → Schema Engine (JSON schema validation)
-│ └── assertion → Assertion Engine (framework-owned assertions)
-│
-├── util
-│ ├── ResourceUtils
-│ ├── FileUtils
-│ ├── JsonUtils
-│ ├── RandomDataUtils
-│ └── TimeUtils
-│
-└── model
-├── request
-├── response
-└── internal
-
-
-
+Below is the canonical architecture layout used by the project. Add new modules or packages to these folders following the same conventions.
+/api-test-platform
+├── .gitignore
+├── pom.xml
+├── README.md
+├── STRUCTURE.md
+├── allure-results/
+│   ├── allure.properties
+│   ├── 0105b7f5-2aa1-4947-b91e-65a38830876b-container.json
+│   ├── 02a9a979-cab7-478f-812f-4b5b61022e74-container.json
+│   ├── 04390918-bc17-46d6-8983-d4217ee994f3-result.json
+│   ├── ... (multiple result and container json files)
+│   └── 6e33a440-4081-43b1-8c09-e6ee6874d87b-result.json
+├── scripts/
+│   └── generate-allure.sh
+├── src/
+│   ├── main/
+│   │   ├── java/org/example/
+│   │   │   ├── core/
+│   │   │   │   ├── auth/
+│   │   │   │   │   └── .gitkeep
+│   │   │   │   ├── config/
+│   │   │   │   │   ├── .gitkeep
+│   │   │   │   │   └── ConfigManager.java
+│   │   │   │   ├── context/
+│   │   │   │   │   ├── .gitkeep
+│   │   │   │   │   └── TestExecutionContext.java
+│   │   │   │   ├── db/
+│   │   │   │   │   └── .gitkeep
+│   │   │   │   ├── env/
+│   │   │   │   │   └── .gitkeep
+│   │   │   │   ├── event/
+│   │   │   │   │   ├── .gitkeep
+│   │   │   │   │   ├── Event.java
+│   │   │   │   │   ├── EventBus.java
+│   │   │   │   │   ├── EventListener.java
+│   │   │   │   │   └── events/
+│   │   │   │   │       ├── ApiRequestFinishedEvent.java
+│   │   │   │   │       ├── ApiRequestStartedEvent.java
+│   │   │   │   │       ├── FrameworkStartedEvent.java
+│   │   │   │   │       └── FrameworkStoppedEvent.java
+│   │   │   │   ├── http/
+│   │   │   │   │   ├── .gitkeep
+│   │   │   │   │   ├── HttpClient.java
+│   │   │   │   │   └── impl/
+│   │   │   │   │       └── RestAssuredHttpClient.java
+│   │   │   │   ├── plugin/
+│   │   │   │   │   ├── .gitkeep
+│   │   │   │   │   ├── PlugIn.java
+│   │   │   │   │   └── PluginManager.java
+│   │   │   │   ├── report/
+│   │   │   │   │   └── .gitkeep
+│   │   │   │   └── retry/
+│   │   │   │       └── .gitkeep
+│   │   │   ├── engine/
+│   │   │   │   ├── data/
+│   │   │   │   │   ├── .gitkeep
+│   │   │   │   │   ├── DataProviderFactory.java
+│   │   │   │   │   ├── JsonDataProvider.java
+│   │   │   │   │   ├── TestData.java
+│   │   │   │   │   └── TestDataProvider.java
+│   │   │   │   ├── flow/
+│   │   │   │   │   └── .gitkeep
+│   │   │   │   ├── mock/
+│   │   │   │   │   └── .gitkeep
+│   │   │   │   └── schema/
+│   │   │   │       ├── .gitkeep
+│   │   │   │       ├── JsonSchemaValidator.java
+│   │   │   │       ├── SchemaValidationResult.java
+│   │   │   │       ├── SchemaValidator.java
+│   │   │   │       └── SchemaValidatorFactory.java
+│   │   │   ├── model/
+│   │   │   │   ├── internal/
+│   │   │   │   │   └── HttpMethod.java
+│   │   │   │   ├── request/
+│   │   │   │   │   ├── .gitkeep
+│   │   │   │   │   └── ApiRequest.java
+│   │   │   │   └── response/
+│   │   │   │       ├── .gitkeep
+│   │   │   │       └── ApiResponse.java
+│   │   │   ├── repository/
+│   │   │   │   └── .gitkeep
+│   │   │   ├── service/
+│   │   │   │   ├── auth/
+│   │   │   │   │   ├── AuthService.java
+│   │   │   │   │   └── impl/
+│   │   │   │   │       └── AuthServiceImpl.java
+│   │   │   │   ├── booking/
+│   │   │   │   │   ├── .gitkeep
+│   │   │   │   │   ├── BookingService.java
+│   │   │   │   │   └── impl/
+│   │   │   │   │       └── BookingServiceImpl.java
+│   │   │   └── util/
+│   │   │       ├── .gitkeep
+│   │   │       ├── FileUtils.java
+│   │   │       ├── JsonUtils.java
+│   │   │       ├── RandomDataUtils.java
+│   │   │       ├── ResourceUtils.java
+│   │   │       └── TimeUtils.java
+│   │   └── resources/
+│   │       ├── config.yaml
+│   │       ├── logback.xml
+│   │       ├── testdata.json
+│   │       └── schemas/
+│   │           └── user.json
+│   └── test/
+│       ├── java/org/example/
+│       │   ├── base/
+│       │   │   ├── .gitkeep
+│       │   │   └── BaseTest.java
+│       │   ├── suites/
+│       │   │   └── .gitkeep
+│       │   └── tests/
+│       │       ├── .gitkeep
+│       │       ├── DataEngineSanityTest.java
+│       │       ├── PlatformSanityTest.java
+│       │       ├── SchemaEngineSanityTest.java
+│       │       ├── UtilitySanityTest.java
+│       │       ├── auth/
+│       │       │   └── AuthTokenTest.java
+│       │       ├── booking/
+│       │       │   ├── BookingE2ETest.java
+│       │       │   └── CreateBookingTest.java
+│       │       ├── listeners/
+│       │       │   ├── FrameworkStartedLogger.java
+│       │       │   └── FrameworkStoppedLogger.java
+│       │       └── plugins/
+│       │           ├── AllureReportingPlugin.java
+│       │           ├── ApiLoggingPlugin.java
+│       │           ├── LifecycleLoggingPlugin.java
+│       │           └── RetryPlugin.java
+│       └── resources/
+│           └── testng.xml
 ---
 
 ## ✅ What Is Already Implemented
