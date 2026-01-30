@@ -49,11 +49,6 @@ Below is the canonical architecture layout used by the project. Add new modules 
 ├── STRUCTURE.md
 ├── allure-results/
 │   ├── allure.properties
-│   ├── 0105b7f5-2aa1-4947-b91e-65a38830876b-container.json
-│   ├── 02a9a979-cab7-478f-812f-4b5b61022e74-container.json
-│   ├── 04390918-bc17-46d6-8983-d4217ee994f3-result.json
-│   ├── ... (multiple result and container json files)
-│   └── 6e33a440-4081-43b1-8c09-e6ee6874d87b-result.json
 ├── scripts/
 │   └── generate-allure.sh
 ├── src/
