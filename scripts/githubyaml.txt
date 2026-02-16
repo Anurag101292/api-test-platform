@@ -1,0 +1,133 @@
+JOB 1 — RUN ALL SHARDS (INITIAL REGRESSION)
+
+jobs:
+  run-all-shards:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1,2,3,4,5,...,200]
+
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-eks-role
+          aws-region: us-east-1
+
+      - name: Configure kubectl
+        run: aws eks update-kubeconfig --name qa-eks --region us-east-1
+
+      - name: Run shard ${{ matrix.shard }}
+        run: |
+          kubectl apply -f - <<EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: shard-${{ matrix.shard }}
+          spec:
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                - name: test
+                  image: <ECR_IMAGE>
+                  env:
+                    - name: SHARD_INDEX
+                      value: "${{ matrix.shard }}"
+                    - name: TOTAL_SHARDS
+                      value: "200"
+                  command:
+                    - sh
+                    - -c
+                    - |
+                      npm run test || echo "FAIL" > /tmp/status.txt
+                      aws s3 cp allure-results s3://qa-reports/run-${{ github.run_id }}/shard-${{ matrix.shard }}/ --recursive
+                      aws s3 cp /tmp/status.txt s3://qa-reports/run-${{ github.run_id }}/status/shard-${{ matrix.shard }}.txt || true
+          EOF
+🟨 JOB 2 — DETECT FAILED SHARDS
+
+  detect-failed-shards:
+    runs-on: ubuntu-latest
+    needs: run-all-shards
+    outputs:
+      failed_shards: ${{ steps.collect.outputs.failed }}
+
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-eks-role
+          aws-region: us-east-1
+
+      - name: Collect failed shards
+        id: collect
+        run: |
+          aws s3 sync s3://qa-reports/run-${{ github.run_id }}/status ./status
+          FAILED=$(grep -l FAIL status/* | sed 's/.*shard-\([0-9]*\).txt/\1/' | tr '\n' ',')
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+
+🟥 JOB 3 — RE-RUN ONLY FAILED SHARDS (🔥 KEY POINT YOU ASKED)
+
+  rerun-failed-shards:
+    runs-on: ubuntu-latest
+    needs: detect-failed-shards
+    if: needs.detect-failed-shards.outputs.failed_shards != ''
+    strategy:
+      matrix:
+        shard: ${{ fromJson('[' + needs.detect-failed-shards.outputs.failed_shards + ']') }}
+
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-eks-role
+          aws-region: us-east-1
+
+      - name: Configure kubectl
+        run: aws eks update-kubeconfig --name qa-eks --region us-east-1
+
+      - name: Re-run failed shard ${{ matrix.shard }}
+        run: |
+          kubectl apply -f - <<EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: rerun-shard-${{ matrix.shard }}
+          spec:
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                - name: test
+                  image: <ECR_IMAGE>
+                  env:
+                    - name: SHARD_INDEX
+                      value: "${{ matrix.shard }}"
+                    - name: TOTAL_SHARDS
+                      value: "200"
+                  command:
+                    - sh
+                    - -c
+                    - |
+                      npm run test
+                      aws s3 cp allure-results s3://qa-reports/run-${{ github.run_id }}/rerun/shard-${{ matrix.shard }}/ --recursive
+          EOF
+🟦 JOB 4 — MERGE & PUBLISH FINAL REPORT
+  merge-and-publish:
+    runs-on: ubuntu-latest
+    needs: [run-all-shards, rerun-failed-shards]
+
+    steps:
+      - name: Download all results
+        run: |
+          aws s3 sync s3://qa-reports/run-${{ github.run_id }}/ ./allure-results
+
+      - name: Generate Allure Report
+        run: |
+          allure generate allure-results -o allure-report --clean
+
+      - name: Publish Report
+        run: |
+          aws s3 cp allure-report s3://qa-reports/run-${{ github.run_id }}/final --recursive
+          echo "Report URL:"
+          echo "https://qa-reports.s3.amazonaws.com/run-${{ github.run_id }}/final/index.html"
